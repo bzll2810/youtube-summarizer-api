@@ -16,12 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load a MUCH SMALLER model (fits in 512MB RAM)
-print("Loading lightweight model...")
+# Load TINY model (fits in 512MB RAM)
+print("Loading tiny T5 model...")
 try:
-    # Using distilbart-cnn-12-6 - much smaller than LaMini
+    # Using t5-small - only 60MB, perfect for free tier
     summarizer = pipeline("summarization", 
-                         model="sshleifer/distilbart-cnn-12-6")
+                         model="t5-small")
     print("✅ Model loaded successfully!")
 except Exception as e:
     print(f"❌ Error loading model: {e}")
@@ -71,15 +71,15 @@ def summarize(request: VideoRequest):
     
     text = transcript_result["text"]
     
-    # Truncate if too long
-    if len(text) > 1024:
-        text = text[:1024]
+    # T5-small works best with shorter texts
+    if len(text) > 512:
+        text = text[:512]
     
     # Generate summary
     try:
         summary = summarizer(text, 
-                           max_length=150, 
-                           min_length=40,
+                           max_length=100, 
+                           min_length=20,
                            do_sample=False)[0]['summary_text']
         
         return {
