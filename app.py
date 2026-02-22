@@ -16,11 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load AI model
-print("Loading LaMini-Flan-T5 model...")
+# Load a MUCH SMALLER model (fits in 512MB RAM)
+print("Loading lightweight model...")
 try:
-    summarizer = pipeline("text2text-generation", 
-                         model="MBZUAI/LaMini-Flan-T5-248M")
+    # Using distilbart-cnn-12-6 - much smaller than LaMini
+    summarizer = pipeline("summarization", 
+                         model="sshleifer/distilbart-cnn-12-6")
     print("✅ Model loaded successfully!")
 except Exception as e:
     print(f"❌ Error loading model: {e}")
@@ -71,15 +72,15 @@ def summarize(request: VideoRequest):
     text = transcript_result["text"]
     
     # Truncate if too long
-    if len(text) > 1500:
-        text = text[:1500]
+    if len(text) > 1024:
+        text = text[:1024]
     
     # Generate summary
     try:
-        summary = summarizer(f"summarize: {text}", 
+        summary = summarizer(text, 
                            max_length=150, 
                            min_length=40,
-                           do_sample=False)[0]['generated_text']
+                           do_sample=False)[0]['summary_text']
         
         return {
             "success": True,
